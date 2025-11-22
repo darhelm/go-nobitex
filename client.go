@@ -745,7 +745,7 @@ func (c *Client) GetOrderBook(symbol string) (*t.OrderBook, error) {
 //   - symbol: market pair ("BTCUSDT", "ETHIRT", etc.)
 //
 // Returns:
-//   - *[]*t.Trade where each Trade has:
+//   - *t.Trades where each Trade has:
 //     Time
 //     Price
 //     Volume
@@ -759,8 +759,8 @@ func (c *Client) GetOrderBook(symbol string) (*t.OrderBook, error) {
 //
 //	trades, _ := client.GetRecentTrades("BTCUSDT")
 //	fmt.Println(trades[0].Price, trades[0].Type)
-func (c *Client) GetRecentTrades(symbol string) (*[]*t.Trade, error) {
-	var trades *[]*t.Trade
+func (c *Client) GetRecentTrades(symbol string) (*t.Trades, error) {
+	var trades *t.Trades
 	err := c.ApiRequest("GET", fmt.Sprintf("/trades/%s", symbol), "v2", false, false, nil, &trades)
 	if err != nil {
 		return nil, err
