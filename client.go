@@ -143,6 +143,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	client := &Client{
 		AutoRefresh: opts.AutoRefresh,
 		BaseUrl:     BaseUrl,
+		Remember:    opts.Remember,
 	}
 
 	if opts.BaseUrl != "" {
@@ -308,9 +309,9 @@ func (c *Client) handleAutoRefresh() error {
 	var ttl time.Duration
 
 	switch c.Remember {
-	case "yes":
+	case "no", "":
 		ttl = 4 * time.Hour
-	case "no":
+	case "yes":
 		ttl = 30 * 24 * time.Hour
 	default:
 		return &GoNobitexError{
@@ -625,6 +626,7 @@ func (c *Client) Authenticate(Username, Password string) (*t.AuthenticationRespo
 		return nil, err
 	}
 
+	c.AuthTime = time.Now()
 	// Update the client's tokens with the newly received ones
 	c.ApiKey = authResponse.Key
 
