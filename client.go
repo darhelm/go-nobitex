@@ -460,9 +460,18 @@ func (c *Client) Request(method string, url string, auth bool, otpRequired bool,
 
 		req.Header.Set("User-Agent", "TraderBot/"+c.UserAgent)
 		req.Header.Set("Authorization", "Token "+c.ApiKey)
-		if otpRequired {
-			req.Header.Set("X-TOTP", c.OtpCode)
+	}
+
+	if otpRequired {
+		if c.UserAgent == "" {
+			return &GoNobitexError{
+				Message: "UserAgent is empty! please set UserAgent",
+				Err:     nil,
+			}
 		}
+
+		req.Header.Set("User-Agent", "TraderBot/"+c.UserAgent)
+		req.Header.Set("X-TOTP", c.OtpCode)
 	}
 
 	resp, err := c.HttpClient.Do(req)
