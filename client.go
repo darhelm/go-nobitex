@@ -149,6 +149,10 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		client.BaseUrl = opts.BaseUrl
 	}
 
+	if opts.UserAgent != "" {
+		client.UserAgent = opts.UserAgent
+	}
+
 	if opts.HttpClient != nil {
 		client.HttpClient = opts.HttpClient
 	} else {
