@@ -39,7 +39,7 @@ type ClientOptions struct {
 	OtpSecret string
 	OtpCode   string
 
-	Remember  string
+	Remember  t.Remember
 	UserAgent string
 
 	// ApiKey is the token used for authenticated API requests.
