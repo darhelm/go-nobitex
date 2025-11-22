@@ -7,10 +7,9 @@ import (
 	t "github.com/darhelm/go-nobitex/types"
 )
 
-// GoNobitexError is the base error for all client-side and API-level failures.
 type GoNobitexError struct {
-	Message string // high-level description
-	Err     error  // wrapped underlying error (optional)
+	Message string
+	Err     error
 }
 
 func (e *GoNobitexError) Error() string {
@@ -22,60 +21,88 @@ func (e *GoNobitexError) Error() string {
 
 func (e *GoNobitexError) Unwrap() error { return e.Err }
 
-// RequestError indicates a failure in preparing, sending, or reading a request.
+// RequestError Error returned when a request cannot be created/sent/read.
 type RequestError struct {
 	GoNobitexError
-
-	// Operation describes what failed, such as "creating request"
-	// "sending request", or "parsing response".
 	Operation string
 }
 
-// APIError represents an error returned directly by the Nobitex API.
-// It is fully aligned with the documented error structure:
+// APIError represents *any* server-side error returned by Nobitex.
 //
-//	{
-//	  "status":  "failed",
-//	  "code":    "SomeError",
-//	  "message": "Description"
-//	}
+// Nobitex usually returns one of:
+//
+//   { "status": "failed", "code": "ErrCode", "message": "msg" }
+//   { "detail": "something went wrong" }
+//   { "status": "failed", "message": "msg", "detail": "extra" }
+//   { ... totally undocumented garbage ... }
 type APIError struct {
 	GoNobitexError
 
-	Status     string // "failed"
-	Code       string // error identifier
-	StatusCode int    // HTTP status code (400/401/429/etc.)
-	Detail     string // optional extra field occasionally returned
+	Status     string
+	Code       string
+	Message    string
+	Detail     string
+	StatusCode int
+
+	// Map of all parsed key->values for inspection (similar to go-bitpin)
+	Fields map[string][]string
 }
 
-// parseErrorResponse parses the response body into an APIError,
-// falling back gracefully if the body is not valid JSON.
+// parseErrorResponse creates the most complete APIError possible.
+// It attempts all documented + undocumented patterns.
 func parseErrorResponse(statusCode int, respBody []byte) *APIError {
-	var body t.ErrorResponse
-	_ = json.Unmarshal(respBody, &body)
+	apiErr := &APIError{
+		StatusCode: statusCode,
+		Fields:     make(map[string][]string),
+	}
 
-	var raw map[string]any
+	// #1 — Attempt to parse official Nobitex error format
+	var base t.ErrorResponse
+	_ = json.Unmarshal(respBody, &base)
+
+	if base.Status != "" {
+		apiErr.Status = base.Status
+	}
+	if base.Code != "" {
+		apiErr.Code = base.Code
+		apiErr.Fields["code"] = []string{base.Code}
+	}
+	if base.Message != "" {
+		apiErr.Message = base.Message
+		apiErr.Fields["message"] = []string{base.Message}
+	}
+
+	// #2 — Parse raw JSON object for extra fields, including "detail"
+	raw := map[string]any{}
 	_ = json.Unmarshal(respBody, &raw)
 
-	var detail string
-	if v, ok := raw["detail"].(string); ok {
-		detail = v
+	for k, v := range raw {
+		switch val := v.(type) {
+		case string:
+			apiErr.Fields[k] = []string{val}
+			if k == "detail" {
+				apiErr.Detail = val
+				if apiErr.Message == "" {
+					apiErr.Message = val
+				}
+			}
+		case []any:
+			// convert []any -> []string
+			strs := make([]string, 0, len(val))
+			for _, item := range val {
+				strs = append(strs, fmt.Sprintf("%v", item))
+			}
+			apiErr.Fields[k] = strs
+		default:
+			apiErr.Fields[k] = []string{fmt.Sprintf("%v", v)}
+		}
 	}
 
-	// Determine the final error message to expose.
-	msg := body.Message
-	if msg == "" && detail != "" {
-		msg = detail
-	}
-	if msg == "" {
-		msg = fmt.Sprintf("API error (%d)", statusCode)
+	// #3 — If message is still empty, fallback
+	if apiErr.Message == "" {
+		apiErr.Message = fmt.Sprintf("API error (%d)", statusCode)
 	}
 
-	return &APIError{
-		GoNobitexError: GoNobitexError{Message: msg},
-		Status:         body.Status,
-		Code:           body.Code,
-		StatusCode:     statusCode,
-		Detail:         detail,
-	}
+	apiErr.GoNobitexError.Message = apiErr.Message
+	return apiErr
 }
