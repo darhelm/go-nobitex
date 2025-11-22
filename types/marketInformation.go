@@ -1,7 +1,5 @@
 package types
 
-import "time"
-
 // Nobitex holds general market-wide configuration values,
 // including supported currencies and precision settings.
 type Nobitex struct {
@@ -93,7 +91,7 @@ type OrderBook struct {
 // timestamp, price, size, and direction.
 type Trade struct {
 	// Time is the execution timestamp of the trade.
-	Time time.Time `json:"time"`
+	Time int64 `json:"time"`
 
 	// Price is the executed trade price.
 	Price string `json:"price"`
