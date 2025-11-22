@@ -15,8 +15,8 @@ import (
 
 // Constants defining the API base URL and version.
 const (
-	// BaseUrl is the root URL for the Bitpin Market API.
-	BaseUrl = "https://apiv2.nobitex.ir/"
+	// BaseUrl is the root URL for the Nobitex Market API.
+	BaseUrl = "https://apiv2.nobitex.ir"
 )
 
 // ClientOptions represents the configuration options for creating a new API client.
@@ -223,30 +223,44 @@ func assertAuth(client *Client) error {
 }
 
 // createApiURI constructs a fully qualified Nobitex API URL using the client's
-// base URL, requested API version, and endpoint path.
+// base URL, an optional version prefix, and the raw endpoint path.
 //
 // Parameters:
-//   - endpoint: The API endpoint, such as "/market/orders/add".
-//   - version: API version string, such as "v2" or "v3". If empty, the path is
-//     built without version prefix.
+//   - endpoint: The API endpoint (MUST begin with a leading slash), for example:
+//     "/market/orders/add"
+//     "/options"
+//     "/orderbook/BTCUSDT/"
+//   - version: Optional API version string such as "v2" or "v3".
+//     If empty, no version segment is inserted.
 //
 // Returns:
-//   - A fully resolved URL pointing to the requested Nobitex endpoint.
+//   - A fully qualified URL as:
+//   - Without version:  {BaseUrl}{endpoint}
+//   - With version:     {BaseUrl}/{version}{endpoint}
 //
 // Behavior:
-//   - Joins BaseUrl + "/api/{version}/{endpoint}" using path.Join.
-//   - If version is "", the final form becomes: BaseUrl + "/api/" + endpoint.
+//   - BaseUrl must NOT have a trailing slash (e.g. "https://apiv2.nobitex.ir").
+//   - Endpoint MUST begin with "/", and is appended as-is.
+//   - Version MUST NOT begin with "/", the function prepends one automatically.
 //
-// Example:
+// Examples:
 //
-//	url := client.createApiURI("/market/stats", "")
-//	// "https://apiv2.nobitex.ir/api/market/stats"
+//	c.BaseUrl = "https://apiv2.nobitex.ir"
+//
+//	createApiURI("/market/stats", "")
+//	→ "https://apiv2.nobitex.ir/market/stats"
+//
+//	createApiURI("/options", "v2")
+//	→ "https://apiv2.nobitex.ir/v2/options"
+//
+//	createApiURI("/orderbook/BTCUSDT", "v3")
+//	→ "https://apiv2.nobitex.ir/v3/orderbook/BTCUSDT"
 func (c *Client) createApiURI(endpoint string, version string) string {
 	if version == "" {
-		return fmt.Sprintf("%s/api%s", c.BaseUrl, endpoint)
+		return fmt.Sprintf("%s%s", c.BaseUrl, endpoint)
 	}
 
-	return fmt.Sprintf("%s/api/%s%s", c.BaseUrl, version, endpoint)
+	return fmt.Sprintf("%s/%s%s", c.BaseUrl, version, endpoint)
 }
 
 // handleAutoRefresh enforces Nobitex's Remember-based session lifetime rules.
@@ -630,7 +644,7 @@ func (c *Client) Authenticate(Username, Password string) (*t.AuthenticationRespo
 //	fmt.Println(cfg.Nobitex.ActiveCurrencies)
 func (c *Client) GetNobitexConfig() (*t.Config, error) {
 	var config *t.Config
-	err := c.ApiRequest("GET", "options", "v2", false, false, nil, &config)
+	err := c.ApiRequest("GET", "/options", "v2", false, false, nil, &config)
 	if err != nil {
 		return nil, err
 	}
@@ -699,7 +713,7 @@ func (c *Client) GetTickers(params t.GetTickersParams) (*t.Tickers, error) {
 //	fmt.Println(ob.Asks[0], ob.Bids[0])
 func (c *Client) GetOrderBook(symbol string) (*t.OrderBook, error) {
 	var orderBook *t.OrderBook
-	err := c.ApiRequest("GET", fmt.Sprintf("/orderbook/%s/", symbol), "v3", false, false, nil, &orderBook)
+	err := c.ApiRequest("GET", fmt.Sprintf("/orderbook/%s", symbol), "v3", false, false, nil, &orderBook)
 	if err != nil {
 		return nil, err
 	}
@@ -732,7 +746,7 @@ func (c *Client) GetOrderBook(symbol string) (*t.OrderBook, error) {
 //	fmt.Println(trades[0].Price, trades[0].Type)
 func (c *Client) GetRecentTrades(symbol string) (*[]*t.Trade, error) {
 	var trades *[]*t.Trade
-	err := c.ApiRequest("GET", fmt.Sprintf("/trades/%s/", symbol), "v2", false, false, nil, &trades)
+	err := c.ApiRequest("GET", fmt.Sprintf("/trades/%s", symbol), "v2", false, false, nil, &trades)
 	if err != nil {
 		return nil, err
 	}
@@ -997,7 +1011,7 @@ func (c *Client) GetOpenOrders(params t.GetOrdersListParams) (*t.OrdersListRespo
 //	st, _ := client.GetOrderStatus(t.GetOrderStatusParams{Id: 12345})
 func (c *Client) GetOrderStatus(params t.GetOrderStatusParams) (*t.OrderStatus, error) {
 	var orders *t.OrderStatus
-	err := c.ApiRequest("POST", "market/orders/status", "", true, false, params, &orders)
+	err := c.ApiRequest("POST", "/market/orders/status", "", true, false, params, &orders)
 	if err != nil {
 		return nil, err
 	}
