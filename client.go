@@ -39,7 +39,7 @@ type ClientOptions struct {
 	OtpSecret string
 	OtpCode   string
 
-	Remember  t.Remember
+	Remember  string
 	UserAgent string
 
 	// ApiKey is the token used for authenticated API requests.
@@ -68,7 +68,7 @@ type Client struct {
 	OtpSecret string
 	OtpCode   string
 
-	Remember  t.Remember
+	Remember  string
 	UserAgent string
 
 	AuthTime time.Time
@@ -308,9 +308,9 @@ func (c *Client) handleAutoRefresh() error {
 	var ttl time.Duration
 
 	switch c.Remember {
-	case t.RememberNo:
+	case "yes":
 		ttl = 4 * time.Hour
-	case t.RememberYes:
+	case "no":
 		ttl = 30 * 24 * time.Hour
 	default:
 		return &GoNobitexError{

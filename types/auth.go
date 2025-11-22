@@ -1,20 +1,5 @@
 package types
 
-// Captcha specifies the captcha mode used during authentication.
-// API clients must set this to "api" when performing programmatic login.
-type Captcha string
-
-const API Captcha = "api"
-
-// Remember indicates whether a long-lived or short-lived authentication
-// token should be issued during login.
-type Remember string
-
-const (
-	RememberYes Remember = "yes" // long-lived key
-	RememberNo  Remember = "no"  // short-lived key
-)
-
 // AuthenticationParams defines the request payload and required headers
 // for initiating a Nobitex authentication session.
 type AuthenticationParams struct {
@@ -25,10 +10,10 @@ type AuthenticationParams struct {
 	Password string `json:"password"`
 
 	// Remember determines whether the server returns a long-lived token.
-	Remember Remember `json:"remember"`
+	Remember string `json:"remember"`
 
 	// Captcha must be set to "api" for bot authentication flows.
-	Captcha Captcha `json:"captcha"`
+	Captcha string `json:"captcha"`
 
 	// XTOTP is the 6-digit TOTP value sent through the X-TOTP header.
 	// This is required when Captcha=="api".

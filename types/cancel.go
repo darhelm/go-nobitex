@@ -28,8 +28,8 @@ type CancelOrderBulkParams struct {
 	// Execution filters orders by execution type, e.g. "limit" or "market".
 	Execution string `json:"execution,omitempty"`
 
-	// TradeType filters orders by market type, such as spot or margin.
-	TradeType TradeType `json:"tradeType,omitempty"`
+	// TradeType filters orders by market type, such as 'spot' or 'margin'.
+	TradeType string `json:"tradeType,omitempty"`
 
 	// SrcCurrency filters orders by base currency of the trading pair.
 	SrcCurrency string `json:"srcCurrency,omitempty"`

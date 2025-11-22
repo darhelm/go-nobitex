@@ -128,12 +128,3 @@ type Trades struct {
 	// Trades is the list of individual trade records.
 	Trades []Trade `json:"trades"`
 }
-
-// TradeType defines the trade environment,
-// such as spot or margin trading.
-type TradeType string
-
-const (
-	TradeTypeSpot   TradeType = "spot"
-	TradeTypeMargin TradeType = "margin"
-)

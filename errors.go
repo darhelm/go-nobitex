@@ -31,10 +31,10 @@ type RequestError struct {
 //
 // Nobitex usually returns one of:
 //
-//   { "status": "failed", "code": "ErrCode", "message": "msg" }
-//   { "detail": "something went wrong" }
-//   { "status": "failed", "message": "msg", "detail": "extra" }
-//   { ... totally undocumented garbage ... }
+//	{ "status": "failed", "code": "ErrCode", "message": "msg" }
+//	{ "detail": "something went wrong" }
+//	{ "status": "failed", "message": "msg", "detail": "extra" }
+//	{ ... totally undocumented garbage ... }
 type APIError struct {
 	GoNobitexError
 

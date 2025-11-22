@@ -23,8 +23,8 @@ type GetWalletParams struct {
 	Currencies []string `json:"assets,omitempty"`
 
 	// TradeType restricts results to wallets associated with a specific
-	// market type, such as spot or margin.
-	TradeType TradeType `json:"type,omitempty"`
+	// market type, such as 'spot' or 'margin'.
+	TradeType string `json:"type,omitempty"`
 }
 
 // Wallets represents a collection of wallet entries,
