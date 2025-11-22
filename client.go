@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"time"
 
 	t "github.com/darhelm/go-nobitex/types"
@@ -243,7 +242,11 @@ func assertAuth(client *Client) error {
 //	url := client.createApiURI("/market/stats", "")
 //	// "https://apiv2.nobitex.ir/api/market/stats"
 func (c *Client) createApiURI(endpoint string, version string) string {
-	return BaseUrl + path.Join("/api", version, endpoint)
+	if version == "" {
+		return fmt.Sprintf("%s/api%s", c.BaseUrl, endpoint)
+	}
+
+	return fmt.Sprintf("%s/api/%s%s", c.BaseUrl, version, endpoint)
 }
 
 // handleAutoRefresh enforces Nobitex's Remember-based session lifetime rules.
@@ -856,7 +859,7 @@ func (c *Client) CancelOrder(params t.CancelOrderParams) (*t.CancelOrderResponse
 	params.Status = "canceled"
 
 	var cancelOrderStatus *t.CancelOrderResponse
-	err := c.ApiRequest("POST", "/market/orders/update-status", "", true, false, params, cancelOrderStatus)
+	err := c.ApiRequest("POST", "/market/orders/update-status", "", true, false, params, &cancelOrderStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -889,7 +892,7 @@ func (c *Client) CancelOrder(params t.CancelOrderParams) (*t.CancelOrderResponse
 //	err := client.CancelOrderBulk(t.CancelOrderBulkParams{Hours: 6})
 func (c *Client) CancelOrderBulk(params t.CancelOrderBulkParams) (*t.CancelOrderResponse, error) {
 	var cancelOrderBulkStatus *t.CancelOrderResponse
-	err := c.ApiRequest("POST", "/market/orders/cancel-old", "", true, false, params, cancelOrderBulkStatus)
+	err := c.ApiRequest("POST", "/market/orders/cancel-old", "", true, false, params, &cancelOrderBulkStatus)
 	if err != nil {
 		return nil, err
 	}
