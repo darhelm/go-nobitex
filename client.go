@@ -52,7 +52,7 @@ type ClientOptions struct {
 	AutoRefresh bool
 }
 
-// Client represents the API client for interacting with the Bitpin Market API.
+// Client represents the API client for interacting with the Nobitex Market API.
 // It manages authentication, base URL, and API requests.
 type Client struct {
 	// HttpClient is the HTTP client used for API requests.
